@@ -35,6 +35,8 @@ class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
      *                                       before method logic is executed
      * @param array<string, Closure> $suffixInterceptors an array (indexed by method name) of interceptor closures to be called
      *                                       after method logic is executed
+     * @param array<string, Closure> $exceptionInterceptors an array (indexed by method name) of interceptor closures to be called
+     *                                       in case of exception happened during method logic execution
      * @psalm-param RealObjectType $instance
      * @psalm-param array<string, callable(
      *   RealObjectType&AccessInterceptorInterface<RealObjectType>=,
@@ -65,7 +67,8 @@ class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
     public function createProxy(
         object $instance,
         array $prefixInterceptors = [],
-        array $suffixInterceptors = []
+        array $suffixInterceptors = [],
+        array $exceptionInterceptors = [],
     ): AccessInterceptorValueHolderInterface {
         $proxyClassName = $this->generateProxy($instance::class);
 
@@ -75,7 +78,7 @@ class AccessInterceptorValueHolderFactory extends AbstractBaseFactory
          * @psalm-suppress MixedMethodCall
          * @psalm-suppress MixedReturnStatement
          */
-        return $proxyClassName::staticProxyConstructor($instance, $prefixInterceptors, $suffixInterceptors);
+        return $proxyClassName::staticProxyConstructor($instance, $prefixInterceptors, $suffixInterceptors, $exceptionInterceptors);
     }
 
     protected function getGenerator(): ProxyGeneratorInterface

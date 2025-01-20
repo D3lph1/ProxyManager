@@ -12,8 +12,10 @@ use ProxyManager\Exception\InvalidProxiedClassException;
 use ProxyManager\Generator\Util\ClassGeneratorUtils;
 use ProxyManager\Proxy\AccessInterceptorValueHolderInterface;
 use ProxyManager\ProxyGenerator\AccessInterceptor\MethodGenerator\MagicWakeup;
+use ProxyManager\ProxyGenerator\AccessInterceptor\MethodGenerator\SetMethodExceptionInterceptor;
 use ProxyManager\ProxyGenerator\AccessInterceptor\MethodGenerator\SetMethodPrefixInterceptor;
 use ProxyManager\ProxyGenerator\AccessInterceptor\MethodGenerator\SetMethodSuffixInterceptor;
+use ProxyManager\ProxyGenerator\AccessInterceptor\PropertyGenerator\MethodExceptionInterceptors;
 use ProxyManager\ProxyGenerator\AccessInterceptor\PropertyGenerator\MethodPrefixInterceptors;
 use ProxyManager\ProxyGenerator\AccessInterceptor\PropertyGenerator\MethodSuffixInterceptors;
 use ProxyManager\ProxyGenerator\AccessInterceptorValueHolder\MethodGenerator\InterceptedMethod;
@@ -70,6 +72,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
         $classGenerator->addPropertyFromGenerator($valueHolder        = new ValueHolderProperty($originalClass));
         $classGenerator->addPropertyFromGenerator($prefixInterceptors = new MethodPrefixInterceptors());
         $classGenerator->addPropertyFromGenerator($suffixInterceptors = new MethodSuffixInterceptors());
+        $classGenerator->addPropertyFromGenerator($exceptionInterceptors = new MethodExceptionInterceptors());
         $classGenerator->addPropertyFromGenerator($publicProperties);
 
         array_map(
@@ -78,20 +81,22 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
             },
             array_merge(
                 array_map(
-                    $this->buildMethodInterceptor($prefixInterceptors, $suffixInterceptors, $valueHolder),
+                    $this->buildMethodInterceptor($prefixInterceptors, $suffixInterceptors, $exceptionInterceptors, $valueHolder),
                     ProxiedMethodsFilter::getProxiedMethods($originalClass)
                 ),
                 [
                     Constructor::generateMethod($originalClass, $valueHolder),
-                    new StaticProxyConstructor($originalClass, $valueHolder, $prefixInterceptors, $suffixInterceptors),
+                    new StaticProxyConstructor($originalClass, $valueHolder, $prefixInterceptors, $suffixInterceptors, $exceptionInterceptors),
                     new GetWrappedValueHolderValue($valueHolder),
                     new SetMethodPrefixInterceptor($prefixInterceptors),
                     new SetMethodSuffixInterceptor($suffixInterceptors),
+                    new SetMethodExceptionInterceptor($exceptionInterceptors),
                     new MagicGet(
                         $originalClass,
                         $valueHolder,
                         $prefixInterceptors,
                         $suffixInterceptors,
+                        $exceptionInterceptors,
                         $publicProperties
                     ),
                     new MagicSet(
@@ -99,6 +104,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
                         $valueHolder,
                         $prefixInterceptors,
                         $suffixInterceptors,
+                        $exceptionInterceptors,
                         $publicProperties
                     ),
                     new MagicIsset(
@@ -106,6 +112,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
                         $valueHolder,
                         $prefixInterceptors,
                         $suffixInterceptors,
+                        $exceptionInterceptors,
                         $publicProperties
                     ),
                     new MagicUnset(
@@ -113,6 +120,7 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
                         $valueHolder,
                         $prefixInterceptors,
                         $suffixInterceptors,
+                        $exceptionInterceptors,
                         $publicProperties
                     ),
                     new MagicClone($originalClass, $valueHolder, $prefixInterceptors, $suffixInterceptors),
@@ -126,13 +134,15 @@ class AccessInterceptorValueHolderGenerator implements ProxyGeneratorInterface
     private function buildMethodInterceptor(
         MethodPrefixInterceptors $prefixes,
         MethodSuffixInterceptors $suffixes,
+        MethodExceptionInterceptors $exceptions,
         ValueHolderProperty $valueHolder
     ): callable {
         return static fn (ReflectionMethod $method): InterceptedMethod => InterceptedMethod::generateMethod(
             new MethodReflection($method->getDeclaringClass()->getName(), $method->getName()),
             $valueHolder,
             $prefixes,
-            $suffixes
+            $suffixes,
+            $exceptions
         );
     }
 }

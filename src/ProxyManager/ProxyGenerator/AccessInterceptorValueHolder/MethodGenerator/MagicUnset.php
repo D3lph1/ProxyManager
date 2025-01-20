@@ -29,6 +29,7 @@ class MagicUnset extends MagicMethodGenerator
         PropertyGenerator $valueHolder,
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors,
+        PropertyGenerator $exceptionInterceptors,
         PublicPropertiesMap $publicProperties
     ) {
         parent::__construct($originalClass, '__unset', [new ParameterGenerator('name')]);
@@ -59,6 +60,7 @@ class MagicUnset extends MagicMethodGenerator
             $valueHolder,
             $prefixInterceptors,
             $suffixInterceptors,
+            $exceptionInterceptors,
             $parent
         ));
     }

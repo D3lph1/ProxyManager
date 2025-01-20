@@ -26,21 +26,25 @@ class StaticProxyConstructor extends MethodGenerator
         ReflectionClass $originalClass,
         PropertyGenerator $valueHolder,
         PropertyGenerator $prefixInterceptors,
-        PropertyGenerator $suffixInterceptors
+        PropertyGenerator $suffixInterceptors,
+        PropertyGenerator $exceptionInterceptors,
     ) {
         parent::__construct('staticProxyConstructor', [], self::FLAG_PUBLIC | self::FLAG_STATIC);
 
         $prefix = new ParameterGenerator('prefixInterceptors');
         $suffix = new ParameterGenerator('suffixInterceptors');
+        $exception = new ParameterGenerator('exceptionInterceptors');
 
         $prefix->setDefaultValue([]);
         $suffix->setDefaultValue([]);
         $prefix->setType('array');
         $suffix->setType('array');
+        $exception->setType('array');
 
         $this->setParameter(new ParameterGenerator('wrappedObject'));
         $this->setParameter($prefix);
         $this->setParameter($suffix);
+        $this->setParameter($exception);
         $this->setReturnType($originalClass->getName());
 
         $this->setDocBlock(
@@ -48,6 +52,7 @@ class StaticProxyConstructor extends MethodGenerator
             . '@param \\' . $originalClass->getName() . " \$wrappedObject\n"
             . "@param \\Closure[] \$prefixInterceptors method interceptors to be used before method logic\n"
             . "@param \\Closure[] \$suffixInterceptors method interceptors to be used before method logic\n\n"
+            . "@param \\Closure[] \$exceptionInterceptors method interceptors to be used in case of exception happened during method logic execution\n\n"
             . '@return self'
         );
 
@@ -58,7 +63,8 @@ class StaticProxyConstructor extends MethodGenerator
             . UnsetPropertiesGenerator::generateSnippet(Properties::fromReflectionClass($originalClass), 'instance')
             . '$instance->' . $valueHolder->getName() . " = \$wrappedObject;\n"
             . '$instance->' . $prefixInterceptors->getName() . " = \$prefixInterceptors;\n"
-            . '$instance->' . $suffixInterceptors->getName() . " = \$suffixInterceptors;\n\n"
+            . '$instance->' . $suffixInterceptors->getName() . " = \$suffixInterceptors;\n"
+            . '$instance->' . $exceptionInterceptors->getName() . " = \$exceptionInterceptors;\n\n"
             . 'return $instance;'
         );
     }

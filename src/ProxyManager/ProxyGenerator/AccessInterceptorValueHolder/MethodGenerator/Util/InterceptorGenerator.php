@@ -45,6 +45,17 @@ if (isset($this->{{$suffixInterceptorsName}}[{{$name}}])) {
 {{$returnExpression}}
 PHP;
 
+    private const TRY_CATCH_TEMPLATE = <<<'PHP'
+try {
+    {{$methodBody}}
+} catch (\Throwable $e) {
+    $this->{{$exceptionInterceptorsName}}[{{$name}}]->__invoke($this, $this->{{$valueHolderName}}, {{$name}}, {{$paramsString}});
+
+    throw $e;
+}
+PHP;
+
+
     /**
      * @param string $methodBody the body of the previously generated code.
      *                           It MUST assign the return value to a variable
@@ -56,6 +67,7 @@ PHP;
         PropertyGenerator $valueHolder,
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors,
+        PropertyGenerator $exceptionInterceptors,
         ?ReflectionMethod $originalMethod
     ): string {
         $name                   = var_export($method->getName(), true);
@@ -72,6 +84,17 @@ PHP;
 
         $paramsString = 'array(' . implode(', ', $params) . ')';
 
+        $exceptionInterceptorsName = $exceptionInterceptors->getName();
+        $replacements = [
+            '{{$methodBody}}' => $methodBody,
+            '{{$exceptionInterceptorsName}}' => $exceptionInterceptorsName,
+            '{{$name}}' => $name,
+            '{{$valueHolderName}}' => $valueHolderName,
+            '{{$paramsString}}' => $paramsString
+        ];
+
+        $methodBody = str_replace(array_keys($replacements), $replacements, self::TRY_CATCH_TEMPLATE);
+
         $replacements = [
             '{{$prefixInterceptorsName}}' => $prefixInterceptorsName,
             '{{$name}}' => $name,
@@ -82,7 +105,6 @@ PHP;
             '{{$suffixInterceptorsName}}' => $suffixInterceptorsName,
             '{{$returnEarlySuffixExpression}}' => ProxiedMethodReturnExpression::generate('$suffixReturnValue', $originalMethod),
             '{{$returnExpression}}' => ProxiedMethodReturnExpression::generate('$returnValue', $originalMethod),
-
         ];
 
         return str_replace(array_keys($replacements), $replacements, self::TEMPLATE);

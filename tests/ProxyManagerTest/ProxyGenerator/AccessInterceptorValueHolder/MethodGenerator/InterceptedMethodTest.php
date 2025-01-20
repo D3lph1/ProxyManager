@@ -22,19 +22,22 @@ final class InterceptedMethodTest extends TestCase
 {
     public function testBodyStructure(): void
     {
-        $valueHolder        = $this->createMock(PropertyGenerator::class);
-        $prefixInterceptors = $this->createMock(PropertyGenerator::class);
-        $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $valueHolder            = $this->createMock(PropertyGenerator::class);
+        $prefixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $suffixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         $method = InterceptedMethod::generateMethod(
             new MethodReflection(BaseClass::class, 'publicByReferenceParameterMethod'),
             $valueHolder,
             $prefixInterceptors,
-            $suffixInterceptors
+            $suffixInterceptors,
+            $exceptionInterceptors
         );
 
         self::assertSame('publicByReferenceParameterMethod', $method->getName());

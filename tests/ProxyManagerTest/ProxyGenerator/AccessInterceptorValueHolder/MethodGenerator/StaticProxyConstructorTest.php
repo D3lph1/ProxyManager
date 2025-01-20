@@ -22,13 +22,15 @@ final class StaticProxyConstructorTest extends TestCase
 {
     public function testBodyStructure(): void
     {
-        $valueHolder        = $this->createMock(PropertyGenerator::class);
-        $prefixInterceptors = $this->createMock(PropertyGenerator::class);
-        $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $valueHolder            = $this->createMock(PropertyGenerator::class);
+        $prefixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $suffixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         $constructor = new StaticProxyConstructor(
             new ReflectionClass(
@@ -36,13 +38,14 @@ final class StaticProxyConstructorTest extends TestCase
             ),
             $valueHolder,
             $prefixInterceptors,
-            $suffixInterceptors
+            $suffixInterceptors,
+            $exceptionInterceptors
         );
 
         self::assertSame('staticProxyConstructor', $constructor->getName());
         self::assertTrue($constructor->isStatic());
         self::assertSame('public', $constructor->getVisibility());
-        self::assertCount(3, $constructor->getParameters());
+        self::assertCount(4, $constructor->getParameters());
         self::assertSame(
             'static $reflection;
 
@@ -54,6 +57,7 @@ unset($instance->bar, $instance->baz);
 $instance->foo = $wrappedObject;
 $instance->pre = $prefixInterceptors;
 $instance->post = $suffixInterceptors;
+$instance->exception = $exceptionInterceptors;
 
 return $instance;',
             $constructor->getBody()
@@ -62,19 +66,22 @@ return $instance;',
 
     public function testBodyStructureWithoutPublicProperties(): void
     {
-        $valueHolder        = $this->createMock(PropertyGenerator::class);
-        $prefixInterceptors = $this->createMock(PropertyGenerator::class);
-        $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $valueHolder            = $this->createMock(PropertyGenerator::class);
+        $prefixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $suffixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         $constructor = new StaticProxyConstructor(
             new ReflectionClass(EmptyClass::class),
             $valueHolder,
             $prefixInterceptors,
-            $suffixInterceptors
+            $suffixInterceptors,
+            $exceptionInterceptors
         );
 
         self::assertSame(
@@ -86,6 +93,7 @@ $instance   = $reflection->newInstanceWithoutConstructor();
 $instance->foo = $wrappedObject;
 $instance->pre = $prefixInterceptors;
 $instance->post = $suffixInterceptors;
+$instance->exception = $exceptionInterceptors;
 
 return $instance;',
             $constructor->getBody()
@@ -97,19 +105,22 @@ return $instance;',
      */
     public function testUnsetsPrivatePropertiesAsWell(): void
     {
-        $valueHolder        = $this->createMock(PropertyGenerator::class);
-        $prefixInterceptors = $this->createMock(PropertyGenerator::class);
-        $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $valueHolder            = $this->createMock(PropertyGenerator::class);
+        $prefixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $suffixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         $constructor = new StaticProxyConstructor(
             new ReflectionClass(ClassWithMixedProperties::class),
             $valueHolder,
             $prefixInterceptors,
-            $suffixInterceptors
+            $suffixInterceptors,
+            $exceptionInterceptors
         );
 
         self::assertStringContainsString(

@@ -29,6 +29,7 @@ class MagicGet extends MagicMethodGenerator
         PropertyGenerator $valueHolder,
         PropertyGenerator $prefixInterceptors,
         PropertyGenerator $suffixInterceptors,
+        PropertyGenerator $exceptionInterceptors,
         PublicPropertiesMap $publicProperties
     ) {
         parent::__construct($originalClass, '__get', [new ParameterGenerator('name')]);
@@ -57,6 +58,7 @@ class MagicGet extends MagicMethodGenerator
             $valueHolder,
             $prefixInterceptors,
             $suffixInterceptors,
+            $exceptionInterceptors,
             $parent
         ));
     }

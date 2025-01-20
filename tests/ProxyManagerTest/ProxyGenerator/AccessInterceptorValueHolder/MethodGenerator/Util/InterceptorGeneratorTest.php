@@ -23,12 +23,13 @@ final class InterceptorGeneratorTest extends TestCase
 {
     public function testInterceptorGenerator(): void
     {
-        $method             = $this->createMock(MethodGenerator::class);
-        $bar                = $this->createMock(ParameterGenerator::class);
-        $baz                = $this->createMock(ParameterGenerator::class);
-        $valueHolder        = $this->createMock(PropertyGenerator::class);
-        $prefixInterceptors = $this->createMock(PropertyGenerator::class);
-        $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $method                 = $this->createMock(MethodGenerator::class);
+        $bar                    = $this->createMock(ParameterGenerator::class);
+        $baz                    = $this->createMock(ParameterGenerator::class);
+        $valueHolder            = $this->createMock(PropertyGenerator::class);
+        $prefixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $suffixInterceptors     = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $bar->method('getName')->willReturn('bar');
         $baz->method('getName')->willReturn('baz');
@@ -37,6 +38,7 @@ final class InterceptorGeneratorTest extends TestCase
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         // @codingStandardsIgnoreStart
         $expected = <<<'PHP'
@@ -49,7 +51,13 @@ if (isset($this->pre['fooMethod'])) {
     }
 }
 
-$returnValue = "foo";
+try {
+    $returnValue = "foo";
+} catch (\Throwable $e) {
+    $this->exception['fooMethod']->__invoke($this, $this->foo, 'fooMethod', array('bar' => $bar, 'baz' => $baz));
+
+    throw $e;
+}
 
 if (isset($this->post['fooMethod'])) {
     $returnEarly       = false;
@@ -72,6 +80,7 @@ PHP;
                 $valueHolder,
                 $prefixInterceptors,
                 $suffixInterceptors,
+                $exceptionInterceptors,
                 null
             )
         );
@@ -85,6 +94,7 @@ PHP;
         $valueHolder        = $this->createMock(PropertyGenerator::class);
         $prefixInterceptors = $this->createMock(PropertyGenerator::class);
         $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $bar->method('getName')->willReturn('bar');
         $baz->method('getName')->willReturn('baz');
@@ -93,6 +103,7 @@ PHP;
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         // @codingStandardsIgnoreStart
         $expected = <<<'PHP'
@@ -106,7 +117,13 @@ return;
     }
 }
 
-$returnValue = "foo";
+try {
+    $returnValue = "foo";
+} catch (\Throwable $e) {
+    $this->exception['fooMethod']->__invoke($this, $this->foo, 'fooMethod', array('bar' => $bar, 'baz' => $baz));
+
+    throw $e;
+}
 
 if (isset($this->post['fooMethod'])) {
     $returnEarly       = false;
@@ -131,6 +148,7 @@ PHP;
                 $valueHolder,
                 $prefixInterceptors,
                 $suffixInterceptors,
+                $exceptionInterceptors,
                 new ReflectionMethod(VoidMethodTypeHintedInterface::class, 'returnVoid')
             )
         );
@@ -144,6 +162,7 @@ PHP;
         $valueHolder        = $this->createMock(PropertyGenerator::class);
         $prefixInterceptors = $this->createMock(PropertyGenerator::class);
         $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $bar->method('getName')->willReturn('bar');
         $baz->method('getName')->willReturn('baz');
@@ -152,6 +171,7 @@ PHP;
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         // @codingStandardsIgnoreStart
         $expected = <<<'PHP'
@@ -164,7 +184,13 @@ if (isset($this->pre['fooMethod'])) {
     }
 }
 
-$returnValue = "foo";
+try {
+    $returnValue = "foo";
+} catch (\Throwable $e) {
+    $this->exception['fooMethod']->__invoke($this, $this->foo, 'fooMethod', array('bar' => $bar, 'baz' => $baz));
+
+    throw $e;
+}
 
 if (isset($this->post['fooMethod'])) {
     $returnEarly       = false;
@@ -187,6 +213,7 @@ PHP;
                 $valueHolder,
                 $prefixInterceptors,
                 $suffixInterceptors,
+                $exceptionInterceptors,
                 new ReflectionMethod(BaseClass::class, 'publicMethod')
             )
         );
@@ -200,6 +227,7 @@ PHP;
         $valueHolder        = $this->createMock(PropertyGenerator::class);
         $prefixInterceptors = $this->createMock(PropertyGenerator::class);
         $suffixInterceptors = $this->createMock(PropertyGenerator::class);
+        $exceptionInterceptors  = $this->createMock(PropertyGenerator::class);
 
         $bar->method('getName')->willReturn('bar');
         $bar->method('getPassedByReference')->willReturn(false);
@@ -210,6 +238,7 @@ PHP;
         $valueHolder->method('getName')->willReturn('foo');
         $prefixInterceptors->method('getName')->willReturn('pre');
         $suffixInterceptors->method('getName')->willReturn('post');
+        $exceptionInterceptors->method('getName')->willReturn('exception');
 
         // @codingStandardsIgnoreStart
         $expected = <<<'PHP'
@@ -222,7 +251,13 @@ if (isset($this->pre['fooMethod'])) {
     }
 }
 
-$returnValue = "foo";
+try {
+    $returnValue = "foo";
+} catch (\Throwable $e) {
+    $this->exception['fooMethod']->__invoke($this, $this->foo, 'fooMethod', array('bar' => $bar, 'baz' => &$baz));
+
+    throw $e;
+}
 
 if (isset($this->post['fooMethod'])) {
     $returnEarly       = false;
@@ -245,6 +280,7 @@ PHP;
                 $valueHolder,
                 $prefixInterceptors,
                 $suffixInterceptors,
+                $exceptionInterceptors,
                 new ReflectionMethod(BaseClass::class, 'publicMethod')
             )
         );
